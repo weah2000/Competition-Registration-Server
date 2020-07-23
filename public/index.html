@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>王者荣耀 - 报名表</title>
+  <script src="https://cdn.bootcss.com/jquery/3.5.0/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/jquery/3.5.0/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/popper.js/2.3.3/umd/popper.min.js"></script>
+  <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <link href="https://cdn.bootcss.com/bootswatch/4.4.1/darkly/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-image: url(./bg.jpg);
+    }
+
+    .card {
+      background-color: rgba(44, 44, 44, 0.5);
+    }
+
+    .mt20 {
+      margin-top: 20px;
+    }
+
+    .ml20 {
+      margin-left: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="card mt20">
+      <div class="card-body">
+        <h4 class="card-title">王者荣耀江北新区巅峰赛</h4>
+        <h5 class="card-title">报名战队(队长)信息填写:</h5>
+        <form id="formSubmit" action="#" method="POST" enctype="multipart/form-data">
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="userName">姓名</label>
+                <input type="text" class="form-control" name="userName" id="userName">
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="phone">手机号</label>
+                <input type="text" class="form-control" name="phone" id="phone">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="idCard">身份证</label>
+            <input type="text" class="form-control" name="idCard" id="idCard">
+          </div>
+          <div class="form-group">
+            <label for="server">游戏服务区</label>
+            <div>
+              <input type="radio" name="server" value="weixin">&nbsp;&nbsp;微信
+              <input type="radio" name="server" value="qq" class="ml20">&nbsp;&nbsp;QQ
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="gameId">游戏ID</label>
+            <input type="text" class="form-control" name="gameId" id="gameId">
+          </div>
+          <div class="form-group">
+            <label for="teamName">战队名称</label>
+            <input type="text" class="form-control" name="teamName" id="teamName">
+          </div>
+          <div class="form-group">
+            <label>报名费支付</label>
+            <div class="row">
+              <div class="col text-center">
+                <img
+                  src="./wxpay.png"
+                  class="img-thumbnail" />
+              </div>
+              <div class="col text-center">
+                <img
+                  src="./alipay.png"
+                  class="img-thumbnail" />
+              </div>
+            </div>
+          </div>
+          <button type="button" id="submit" class="btn btn-warning btn-lg btn-block">提交</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+  $.fn.serializeObject = function () {
+    var o = {};
+    var a = this.serializeArray();
+    $.each(a, function () {
+      if (o[this.name]) {
+        if (!o[this.name].push) {
+          o[this.name] = [o[this.name]];
+        }
+        o[this.name].push(this.value || '');
+      } else {
+        o[this.name] = this.value || '';
+      }
+    });
+    return o;
+  };
+  $("#submit").click(function () {
+    // 验证表单数据
+    var d = $("#formSubmit").serializeObject();
+    console.log(d);
+    if (!d.userName) {
+      alert('请输入您的姓名');
+      return
+    }
+    if (!d.phone|| !(/^1[3-9]\d{9}$/.test(d.phone))) {
+      alert('请输入正确的手机号');
+      return
+    }
+    if (!d.idCard || !(/(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)/.test(d.idCard))) {
+      alert('请输入正确的身份证');
+      return
+    }
+    if (!d.gameId) {
+      alert('请输入您的游戏ID');
+      return
+    }
+    if (!d.server) {
+      alert('请选择游戏服务器');
+      return
+    }
+    if (!d.teamName) {
+      alert('请输入您的战队名称');
+      return
+    }
+    d.status = "2";
+    $.ajax({
+        url:"/register",
+        type:"POST",
+        dataType:"json",
+        contentType: "application/json",
+        data:JSON.stringify(d),
+      })
+      .done(function(resp){
+        console.log(resp)
+        if(resp.resCode === "200"){
+          alert(resp.resMsg);
+          location.reload();
+        }else{
+          alert(resp.resMsg)
+        }
+        return
+      })
+      .fail(function(){
+        alert('连接失败')
+        return
+      })
+      .always(function(){
+        console.log('失败')
+        return
+      })
+  })
+
+  function register() {
+    var serverList = document.getElementsByName("server")
+    var server = "";
+    for (var i = 0; i < serverList.length; i++) {
+      if (serverList[i].checked) {
+        server = serverList[i].value;
+        console.log(server)
+      }
+    }
+    if (server == "") {
+      alert('请选择游戏服务区')
+      return
+    }
+    var userName = $("#userName").val(),
+      phone = $("#phone").val(),
+      idCard = $("#idCard").val(),
+      gameId = $("#gameId").val(),
+      teamName = $("#teamName").val();
+    if (!userName) {
+      alert('请输入您的姓名');
+      return
+    }
+    if (!phone) {
+      alert('请输入您的手机号');
+      return
+    }
+    if (!idCard) {
+      alert('请输入您的身份证');
+      return
+    }
+    if (!gameId) {
+      alert('请输入您的游戏ID');
+      return
+    }
+    if (!teamName) {
+      alert('请输入您的战队名称');
+      return
+    }
+    console.log({
+      "userName": userName,
+      "phone": phone,
+      "idCard": idCard,
+      "gameId": gameId,
+      "server": server,
+      "teamName": teamName
+    })
+
+  }
+</script>
+
+</html>

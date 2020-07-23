@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>王者荣耀 - 报名表</title>
+  <script src="https://cdn.bootcss.com/jquery/3.5.0/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/jquery/3.5.0/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/popper.js/2.3.3/umd/popper.min.js"></script>
+  <script src="https://cdn.bootcss.com/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <link href="https://cdn.bootcss.com/bootswatch/4.4.1/darkly/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .card {
+      background-color: rgba(44, 44, 44, 0.5);
+    }
+
+    .mt20 {
+      margin-top: 20px;
+    }
+
+    .ml20 {
+      margin-left: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <div class="card mt20">
+      <div class="card-body">
+        <h5>查询</h5>
+        <form id="formSubmit" action="#" method="POST" enctype="multipart/form-data">
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="phone">手机号</label>
+                <input type="text" class="form-control" name="phone" id="phone">
+              </div>
+            </div>
+          </div>
+          <button type="button" id="submit" class="btn btn-warning btn-block">查询</button>
+        </form>
+        <div class="table-responsive">
+          <table class="table table-hover table-condensed">
+            <thead>
+              <tr>
+                <th>姓名</th>
+                <th>手机号</th>
+                <th>身份证</th>
+                <th>游戏服务区</th>
+                <th>游戏ID</th>
+                <th>战队名称</th>
+                <th>付款状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+  var StatusDict = {
+    "1": "已支付",
+    "2": "未付款"
+  };
+  $.fn.serializeObject = function () {
+    var o = {};
+    var a = this.serializeArray();
+    $.each(a, function () {
+      if (o[this.name]) {
+        if (!o[this.name].push) {
+          o[this.name] = [o[this.name]];
+        }
+        o[this.name].push(this.value || '');
+      } else {
+        o[this.name] = this.value || '';
+      }
+    });
+    return o;
+  };
+
+  function recharge(id) {
+    console.log(id);
+    var d = {
+      '_id': id,
+      "status": "1"
+    };
+    $.ajax({
+        url: "/update",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify(d),
+      })
+      .done(function (resp) {
+        if (resp.resCode === "200") {
+          alert(resp.resMsg);
+          $("#submit").click()
+        } else {
+          alert(resp.resMsg)
+        }
+        return
+      })
+      .fail(function () {
+        alert('连接失败')
+        return
+      })
+      .always(function () {
+        console.log('失败')
+        return
+      })
+  }
+  $("#submit").click(function () {
+    // 验证表单数据
+    var d = $("#formSubmit").serializeObject();
+    console.log(d);
+    $.ajax({
+        url: "/query",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify(d),
+      })
+      .done(function (resp) {
+        if (resp.resCode === "200") {
+          var data = resp.data;
+          $("#tbody").empty();
+          for (var i = 0; i < data.length; i++) {
+            console.log(data[i].status);
+            var opt = "";
+            if (data[i].status && data[i].status == '2') {
+              opt = '<button class="btn btn-info btn-xs" onclick="recharge(\'' +
+                data[i]['_id'] + '\')">确认付款</button>';
+            }
+            //创建新的tr（newTr）
+            var newTr = document.createElement('tr');
+            //添加tr里的内容
+            newTr.innerHTML = '<td>' + data[i].userName + '</td><td>' +
+              data[i].phone + '</td><td>' +
+              data[i].idCard + '</td><td>' +
+              data[i].server + '</td><td>' +
+              data[i].gameId + '</td><td>' +
+              data[i].teamName + '</td><td>' +
+              StatusDict[data[i].status] + '</td><td>' + opt + '</td>';
+            //把新的tr(newTr)加入到tbody中
+            $("#tbody")[0].appendChild(newTr);
+          }
+        } else {
+          alert(resp.resMsg)
+        }
+        return
+      })
+      .fail(function () {
+        alert('连接失败')
+        return
+      })
+      .always(function () {
+        console.log('失败')
+        return
+      })
+  })
+</script>
+
+</html>
